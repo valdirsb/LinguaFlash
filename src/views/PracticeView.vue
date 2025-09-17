@@ -7,6 +7,14 @@
 
     <div class="word-container" v-if="currentWord">
       <h2>{{ currentWord.word }}</h2>
+      <div class="translation-container">
+        <button class="translate-btn" @click="showTranslation = !showTranslation">
+          Traduzir
+        </button>
+        <div class="popover" v-if="showTranslation">
+          {{ currentWord.translation }}
+        </div>
+      </div>
       <div class="options-grid">
         <div 
           v-for="option in currentOptions" 
@@ -62,6 +70,7 @@ const currentOptions = ref<Word[]>([]);
 const showFeedback = ref(false);
 const selectedOption = ref<number | null>(null);
 const showResults = ref(false);
+const showTranslation = ref(false);
 const score = ref({
   correct: 0,
   incorrect: 0
@@ -179,7 +188,43 @@ onMounted(() => {
 .word-container h2 {
   font-size: 2em;
   color: #2c3e50;
+  margin-bottom: 10px;
+}
+
+.translation-container {
+  position: relative;
+  display: flex;
+  justify-content: center;
   margin-bottom: 20px;
+}
+
+.translate-btn {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 5px 10px;
+  font-size: 0.9em;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.translate-btn:hover {
+  background-color: #2980b9;
+}
+
+.popover {
+  position: absolute;
+  top: 100%;
+  padding: 8px 12px;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-top: 5px;
+  z-index: 1000;
+  font-size: 1em;
+  color: #2c3e50;
 }
 
 .options-grid {
