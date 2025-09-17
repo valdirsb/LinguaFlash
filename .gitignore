@@ -27,4 +27,24 @@ coverage
 *.sln
 *.sw?
 
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Build files
 *.tsbuildinfo
+
+# Upload directories
+/backend/uploads/*
+!/backend/uploads/.gitkeep
+
+# Database files
+*.sqlite
+*.sqlite3
+*.db
+
+# Temporary files
+*.tmp
+*.temp
+.temp/
