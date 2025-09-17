@@ -123,18 +123,23 @@ const getRandomWords = (count: number, exclude: Word) => {
 
 const setupNextWord = () => {
   if (words.value.length < 4) return;
-  
+
   showFeedback.value = false;
   selectedOption.value = null;
-  
+
   // Seleciona uma palavra aleatória
   const randomIndex = Math.floor(Math.random() * words.value.length);
   currentWord.value = words.value[randomIndex];
-  
+
   // Gera opções aleatórias incluindo a palavra correta
   const otherOptions = getRandomWords(3, currentWord.value);
   currentOptions.value = [...otherOptions, currentWord.value]
     .sort(() => 0.5 - Math.random());
+
+  // Toca o áudio automaticamente ao carregar a palavra
+  setTimeout(() => {
+    speakWord();
+  }, 300); // pequeno delay para garantir que o valor foi atualizado
 };
 
 const selectOption = async (optionId: number) => {
