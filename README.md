@@ -4,11 +4,13 @@ Uma aplicação web moderna e interativa para aprendizado de idiomas através de
 
 ## 🚀 Características
 
+- Sistema de autenticação completo (registro e login)
 - Interface intuitiva e amigável
 - Sistema de cadastro de palavras com imagens
 - Modo prática com quiz interativo
 - Sistema de pontuação e feedback imediato
 - Contagem de acertos e erros
+- Proteção de rotas com authentication guards
 - Containerização com Docker
 
 ## 🛠️ Tecnologias Utilizadas
@@ -19,12 +21,15 @@ Uma aplicação web moderna e interativa para aprendizado de idiomas através de
   - TypeScript
   - Axios
   - CSS3
+  - Composables para gerenciamento de estado
 
 - Backend:
   - Node.js
   - Express
   - MySQL
   - Multer (para upload de arquivos)
+  - JWT (JSON Web Tokens para autenticação)
+  - Bcrypt (para hash de senhas)
 
 - Infraestrutura:
   - Docker
@@ -75,15 +80,29 @@ Uma aplicação web moderna e interativa para aprendizado de idiomas através de
 
 ## 🔄 Fluxo da Aplicação
 
-1. **Menu Principal**
+1. **Autenticação**
+   - **Registro**
+     - Formulário de registro com validação
+     - Campos: nome, email, senha
+     - Hash seguro da senha
+     - Geração de token JWT
+   
+   - **Login**
+     - Formulário de login
+     - Validação de credenciais
+     - Geração de token JWT
+     - Redirecionamento automático
+
+2. **Menu Principal** (requer autenticação)
    - Opções disponíveis: Palavras, Frases*, Diálogos*
    - (*) Funcionalidades futuras
 
-2. **Seção Palavras**
+3. **Seção Palavras**
    - **Cadastrar Palavra**
      - Formulário para adicionar novas palavras
      - Campos: palavra em inglês, tradução, imagem
      - Upload de imagem associada
+     - Vinculação automática com usuário
    
    - **Praticar**
      - Quiz interativo com imagens
@@ -92,12 +111,59 @@ Uma aplicação web moderna e interativa para aprendizado de idiomas através de
      - Feedback visual imediato
      - Contagem de acertos e erros
      - Resultados finais ao encerrar
+     - Acesso apenas às palavras do usuário
 
 ## 📚 Banco de Dados
+
+### Tabela: users
+- `id` (INT, AUTO_INCREMENT, PRIMARY KEY)
+- `name` (VARCHAR(255)) - Nome do usuário
+- `email` (VARCHAR(255), UNIQUE) - Email do usuário
+- `password` (VARCHAR(255)) - Hash da senha
+- `created_at` (TIMESTAMP) - Data de criação
 
 ### Tabela: words
 - `id` (INT, AUTO_INCREMENT, PRIMARY KEY)
 - `word` (VARCHAR(255)) - Palavra em inglês
+- `translation` (VARCHAR(255)) - Tradução em português
+- `image_url` (VARCHAR(255)) - Caminho da imagem
+- `user_id` (INT, FOREIGN KEY) - ID do usuário que cadastrou
+- `created_at` (TIMESTAMP) - Data de criação
+
+## 🔒 Autenticação e Segurança
+
+- JWT (JSON Web Tokens) para gerenciamento de sessão
+- Proteção de rotas no frontend e backend
+- Hash de senhas com bcrypt
+- Middleware de autenticação para proteção de rotas da API
+- Verificação automática de token expirado
+- Redirecionamento automático para login quando necessário
+- Associação automática de palavras ao usuário atual
+
+## 🔐 Endpoints da API
+
+### Autenticação
+- `POST /api/auth/register` - Registro de novo usuário
+  - Body: `{ name, email, password }`
+  - Retorna: `{ token, user }`
+
+- `POST /api/auth/login` - Login de usuário
+  - Body: `{ email, password }`
+  - Retorna: `{ token, user }`
+
+- `GET /api/auth/me` - Informações do usuário atual
+  - Header: `Authorization: Bearer <token>`
+  - Retorna: `{ user }`
+
+### Palavras
+- `POST /api/words` - Cadastro de palavra (autenticado)
+  - Header: `Authorization: Bearer <token>`
+  - Body: FormData com `word`, `translation`, `image`
+  - Retorna: `{ id, word, translation, image_url }`
+
+- `GET /api/words` - Lista de palavras do usuário (autenticado)
+  - Header: `Authorization: Bearer <token>`
+  - Retorna: `[{ id, word, translation, image_url }]`
 - `translation` (VARCHAR(255)) - Tradução em português
 - `image_url` (VARCHAR(255)) - Caminho da imagem
 - `created_at` (TIMESTAMP) - Data de criação

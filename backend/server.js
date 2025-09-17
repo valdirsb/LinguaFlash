@@ -1,10 +1,18 @@
 const express = require('express');
 const cors = require('cors');
-const mysql = require('mysql2');
 const multer = require('multer');
 const path = require('path');
+require('dotenv').config();
 
+const createPool = require('./db');
+const authRoutes = require('./routes/auth');
 const app = express();
+
+// Ensure JWT_SECRET is set
+if (!process.env.JWT_SECRET) {
+    console.error('FATAL ERROR: JWT_SECRET is not defined');
+    process.exit(1);
+}
 
 app.use(cors());
 app.use(express.json());
@@ -22,51 +30,52 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-// Conexão com o banco de dados
-const pool = mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
-});
+// Inicializar o servidor após conectar ao banco de dados
+createPool().then(pool => {
+  // Passar a pool para as rotas de autenticação
+  app.use('/api/auth', authRoutes);
 
-// Rotas da API
-app.post('/api/words', upload.single('image'), async (req, res) => {
-  try {
-    const { word, translation } = req.body;
-    const imageUrl = req.file.filename;
+  // Auth middleware
+  const authMiddleware = require('./routes/authMiddleware');
 
-    const [result] = await pool.promise().query(
-      'INSERT INTO words (word, translation, image_url) VALUES (?, ?, ?)',
-      [word, translation, imageUrl]
-    );
+  // Protected routes
+  app.post('/api/words', authMiddleware, upload.single('image'), async (req, res) => {
+    try {
+      const { word, translation } = req.body;
+      const imageUrl = req.file.filename;
 
-    res.json({ 
-      id: result.insertId,
-      word,
-      translation,
-      image_url: imageUrl
-    });
-  } catch (error) {
-    console.error('Error creating word:', error);
-    res.status(500).json({ error: 'Error creating word' });
-  }
-});
+      const [result] = await pool.query(
+        'INSERT INTO words (word, translation, image_url, user_id) VALUES (?, ?, ?, ?)',
+        [word, translation, imageUrl, req.user.id]
+      );
 
-app.get('/api/words', async (req, res) => {
-  try {
-    const [rows] = await pool.promise().query('SELECT * FROM words');
-    res.json(rows);
-  } catch (error) {
-    console.error('Error fetching words:', error);
-    res.status(500).json({ error: 'Error fetching words' });
-  }
-});
+      res.json({ 
+        id: result.insertId,
+        word,
+        translation,
+        image_url: imageUrl
+      });
+    } catch (error) {
+      console.error('Error creating word:', error);
+      res.status(500).json({ error: 'Error creating word' });
+    }
+  });
 
-const port = 3000;
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+  app.get('/api/words', authMiddleware, async (req, res) => {
+    try {
+      const [rows] = await pool.query('SELECT * FROM words WHERE user_id = ?', [req.user.id]);
+      res.json(rows);
+    } catch (error) {
+      console.error('Error fetching words:', error);
+      res.status(500).json({ error: 'Error fetching words' });
+    }
+  });
+
+  const port = 3000;
+  app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+  });
+}).catch(err => {
+  console.error('Failed to start server:', err);
+  process.exit(1);
 });

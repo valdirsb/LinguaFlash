@@ -38,6 +38,10 @@
         </div>
       </div>
 
+      <div v-if="error" class="error-message">
+        {{ error }}
+      </div>
+
       <div class="form-actions">
         <button type="submit" :disabled="isSubmitting">
           {{ isSubmitting ? 'Salvando...' : 'Salvar' }}
@@ -47,23 +51,32 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue';
-import axios from 'axios';
 import { useRouter } from 'vue-router';
+import api from '@/api/axios';
+import type { AxiosError } from 'axios';
 
 const router = useRouter();
-const imagePreview = ref(null);
+const imagePreview = ref<string | null>(null);
 const isSubmitting = ref(false);
+const error = ref('');
 
-const formData = ref({
+interface FormData {
+  word: string;
+  translation: string;
+  image: File | null;
+}
+
+const formData = ref<FormData>({
   word: '',
   translation: '',
   image: null
 });
 
-const handleImageChange = (event) => {
-  const file = event.target.files[0];
+const handleImageChange = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  const file = target.files?.[0];
   if (file) {
     formData.value.image = file;
     imagePreview.value = URL.createObjectURL(file);
@@ -73,12 +86,16 @@ const handleImageChange = (event) => {
 const handleSubmit = async () => {
   try {
     isSubmitting.value = true;
+    error.value = '';
+    
     const submitData = new FormData();
     submitData.append('word', formData.value.word);
     submitData.append('translation', formData.value.translation);
-    submitData.append('image', formData.value.image);
+    if (formData.value.image) {
+      submitData.append('image', formData.value.image);
+    }
 
-    await axios.post('http://localhost:3000/api/words', submitData, {
+    await api.post('/words', submitData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
@@ -86,9 +103,15 @@ const handleSubmit = async () => {
 
     alert('Palavra cadastrada com sucesso!');
     router.push('/words');
-  } catch (error) {
-    console.error('Erro ao cadastrar palavra:', error);
-    alert('Erro ao cadastrar palavra. Por favor, tente novamente.');
+  } catch (err) {
+    const error_ = err as AxiosError;
+    console.error('Erro ao cadastrar palavra:', error_);
+    if (error_.response?.status === 401) {
+      error.value = 'Sessão expirada. Por favor, faça login novamente.';
+      router.push('/login');
+    } else {
+      error.value = (error_.response?.data as any)?.message || 'Erro ao cadastrar palavra. Por favor, tente novamente.';
+    }
   } finally {
     isSubmitting.value = false;
   }

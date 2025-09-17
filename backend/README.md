@@ -11,6 +11,9 @@ Backend do LinguaFlash, responsável pelo gerenciamento de dados, upload de imag
 - **MySQL** - Banco de dados relacional
 - **Multer** - Middleware para upload de arquivos
 - **CORS** - Middleware para Cross-Origin Resource Sharing
+- **JWT** - JSON Web Tokens para autenticação
+- **Bcrypt** - Hash de senhas
+- **dotenv** - Gerenciamento de variáveis de ambiente
 
 ## 🏗️ Estrutura do Projeto
 
@@ -25,7 +28,18 @@ backend/
 
 ## 🗃️ Banco de Dados
 
-### Tabela: words
+### Tabelas
+
+#### users
+
+| Campo        | Tipo          | Descrição                            |
+|-------------|---------------|---------------------------------------|
+| id          | INT          | Identificador único (AUTO_INCREMENT)  |
+| username    | VARCHAR(255) | Nome de usuário                       |
+| password    | VARCHAR(255) | Hash da senha                         |
+| created_at  | TIMESTAMP    | Data de criação do registro           |
+
+#### words
 
 | Campo        | Tipo          | Descrição                            |
 |-------------|---------------|---------------------------------------|
@@ -33,10 +47,18 @@ backend/
 | word        | VARCHAR(255) | Palavra em inglês                     |
 | translation | VARCHAR(255) | Tradução em português                 |
 | image_url   | VARCHAR(255) | Caminho da imagem no servidor         |
+| user_id     | INT          | ID do usuário que criou o registro    |
 | created_at  | TIMESTAMP    | Data de criação do registro           |
 
 ### Schema SQL
 ```sql
+CREATE TABLE IF NOT EXISTS users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS words (
     id INT AUTO_INCREMENT PRIMARY KEY,
     word VARCHAR(255) NOT NULL,
@@ -48,8 +70,89 @@ CREATE TABLE IF NOT EXISTS words (
 
 ## 🔌 API Endpoints
 
-### GET /api/words
-Retorna todas as palavras cadastradas.
+### Autenticação
+
+#### POST /api/auth/register
+Registra um novo usuário.
+
+##### Request
+```json
+{
+  "username": "user123",
+  "password": "senha123"
+}
+```
+
+##### Response
+```json
+{
+  "id": 1,
+  "username": "user123",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+##### Status Codes
+- 201: Criado com sucesso
+- 400: Dados inválidos
+- 409: Nome de usuário já existe
+- 500: Erro interno do servidor
+
+#### POST /api/auth/login
+Autentica um usuário.
+
+##### Request
+```json
+{
+  "username": "user123",
+  "password": "senha123"
+}
+```
+
+##### Response
+```json
+{
+  "id": 1,
+  "username": "user123",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+##### Status Codes
+- 200: Sucesso
+- 401: Credenciais inválidas
+- 500: Erro interno do servidor
+
+#### GET /api/auth/me
+Retorna informações do usuário autenticado.
+
+##### Headers
+```
+Authorization: Bearer <token>
+```
+
+##### Response
+```json
+{
+  "id": 1,
+  "username": "user123"
+}
+```
+
+##### Status Codes
+- 200: Sucesso
+- 401: Não autenticado
+- 500: Erro interno do servidor
+
+### Palavras
+
+#### GET /api/words
+Retorna todas as palavras cadastradas do usuário autenticado.
+
+##### Headers
+```
+Authorization: Bearer <token>
+```
 
 #### Response
 ```json
@@ -71,9 +174,13 @@ Retorna todas as palavras cadastradas.
 ### POST /api/words
 Cadastra uma nova palavra com imagem.
 
-#### Request
-- Content-Type: multipart/form-data
+#### Headers
+```
+Authorization: Bearer <token>
+Content-Type: multipart/form-data
+```
 
+#### Request
 | Campo       | Tipo   | Descrição              |
 |------------|--------|------------------------|
 | word       | string | Palavra em inglês      |
@@ -105,6 +212,8 @@ Cadastra uma nova palavra com imagem.
 | DB_USER      | Usuário do banco             | root          |
 | DB_PASSWORD  | Senha do banco               | password      |
 | DB_NAME      | Nome do banco de dados       | english_practice |
+| JWT_SECRET   | Chave secreta para JWT       | -             |
+| NODE_ENV     | Ambiente de execução         | development   |
 
 ### Configuração do Multer
 
@@ -190,6 +299,14 @@ Formato padrão de resposta de erro:
 
 ## 🔐 Segurança
 
+### Autenticação e Autorização
+- JSON Web Tokens (JWT) para autenticação
+- Middleware de autenticação para rotas protegidas
+- Hash de senhas com bcrypt
+- Validação de dados com express-validator
+- Proteção contra brute force
+- Expiração de tokens
+
 ### CORS
 - Origem permitida: http://localhost:5173 (frontend)
 - Métodos: GET, POST
@@ -200,6 +317,7 @@ Formato padrão de resposta de erro:
 - Limite de tamanho: 5MB
 - Sanitização de nomes de arquivo
 - Verificação de malware (recomendado para produção)
+- Acesso restrito por usuário
 
 ## 🧪 Testes
 
@@ -219,9 +337,11 @@ curl -X POST \
 
 ## 📈 Melhorias Futuras
 
-1. Autenticação e Autorização
-   - Implementar JWT
-   - Controle de acesso por usuário
+1. Funcionalidades
+   - Categorização de palavras
+   - Múltiplos modos de prática
+   - Sistema de pontuação
+   - Estatísticas de progresso
 
 2. Cache
    - Implementar Redis para cache de consultas frequentes
@@ -255,3 +375,9 @@ curl -X POST \
    - Confirmar origem correta no frontend
    - Verificar headers permitidos
    - Checar configuração CORS
+
+4. **Problemas de autenticação**
+   - Verificar validade do token JWT
+   - Confirmar que o token está sendo enviado corretamente nos headers
+   - Checar se JWT_SECRET está configurado
+   - Validar formato do token (Bearer)

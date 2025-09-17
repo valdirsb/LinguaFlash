@@ -19,16 +19,17 @@ services:
     ports:
       - "3000:3000"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
       - DB_HOST=db
       - DB_USER=root
       - DB_PASSWORD=password
       - DB_NAME=english_practice
+      - JWT_SECRET=secret_key_placeholder_change_in_production
     volumes:
-      - ./backend:/app
-      - /app/node_modules
       - ./backend/uploads:/app/uploads
+    restart: unless-stopped
       
   db:
     image: mysql:8.0
@@ -40,6 +41,12 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
       - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    command: --default-authentication-plugin=mysql_native_password
 
 volumes:
   mysql_data:

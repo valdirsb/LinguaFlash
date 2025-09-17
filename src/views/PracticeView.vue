@@ -18,7 +18,7 @@
           }"
           @click="selectOption(option.id)"
         >
-          <img :src="'http://localhost:3000/uploads/' + option.image_url" :alt="option.word">
+          <img :src="getImageUrl(option.image_url)" :alt="option.word">
         </div>
       </div>
     </div>
@@ -41,26 +41,39 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import axios from 'axios';
+import api from '@/api/axios';
+import type { AxiosError } from 'axios';
+import { UPLOADS_URL } from '@/config/constants';
+
+interface Word {
+  id: number;
+  word: string;
+  translation: string;
+  image_url: string;
+}
 
 const router = useRouter();
-const words = ref([]);
-const currentWord = ref(null);
-const currentOptions = ref([]);
+const words = ref<Word[]>([]);
+const currentWord = ref<Word | null>(null);
+const currentOptions = ref<Word[]>([]);
 const showFeedback = ref(false);
-const selectedOption = ref(null);
+const selectedOption = ref<number | null>(null);
 const showResults = ref(false);
 const score = ref({
   correct: 0,
   incorrect: 0
 });
 
+const getImageUrl = (imageUrl: string) => {
+  return `${UPLOADS_URL}/${imageUrl}`;
+};
+
 const fetchWords = async () => {
   try {
-    const response = await axios.get('http://localhost:3000/api/words');
+    const response = await api.get<Word[]>('/words');
     words.value = response.data;
     if (words.value.length < 4) {
       alert('É necessário cadastrar pelo menos 4 palavras para iniciar o treino.');
@@ -69,8 +82,13 @@ const fetchWords = async () => {
     }
     setupNextWord();
   } catch (error) {
-    console.error('Erro ao buscar palavras:', error);
-    alert('Erro ao carregar palavras. Por favor, tente novamente.');
+    const err = error as AxiosError;
+    console.error('Erro ao buscar palavras:', err);
+    if (err.response?.status === 401) {
+      router.push('/login');
+    } else {
+      alert('Erro ao carregar palavras. Por favor, tente novamente.');
+    }
   }
 };
 
