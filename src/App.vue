@@ -4,15 +4,25 @@
       <div class="nav-brand">
         <Logo size="medium" />
       </div>
-      <div class="nav-links">
-        <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/words">Palavras</RouterLink>
-        <RouterLink to="/register-word">Adicionar Palavra</RouterLink>
-        <RouterLink to="/practice">Praticar</RouterLink>
-      </div>
-      <div class="nav-user">
-        <span v-if="user" class="user-name">{{ user.name }}</span>
-        <button @click="handleLogout" class="btn-logout">Sair</button>
+      
+      <!-- Botão do menu mobile -->
+      <button class="menu-toggle" @click="isMenuOpen = !isMenuOpen" :aria-expanded="isMenuOpen">
+        <span class="menu-icon"></span>
+        <span class="sr-only">Menu</span>
+      </button>
+
+      <!-- Container para links e área do usuário no mobile -->
+      <div class="nav-mobile" :class="{ 'is-open': isMenuOpen }">
+        <div class="nav-links">
+          <RouterLink to="/" @click="isMenuOpen = false">Home</RouterLink>
+          <RouterLink to="/words" @click="isMenuOpen = false">Palavras</RouterLink>
+          <RouterLink to="/register-word" @click="isMenuOpen = false">Adicionar Palavra</RouterLink>
+          <RouterLink to="/practice" @click="isMenuOpen = false">Praticar</RouterLink>
+        </div>
+        <div class="nav-user">
+          <span v-if="user" class="user-name">{{ user.name }}</span>
+          <button @click="handleLogout" class="btn-logout">Sair</button>
+        </div>
       </div>
     </nav>
     <main class="app-main">
@@ -27,11 +37,12 @@
 <script setup lang="ts">
 import { useAuth } from '@/composables/useAuth'
 import { useRouter } from 'vue-router'
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import Logo from './components/Logo.vue'
 
 const { isAuthenticated, user, logout, checkAuth } = useAuth()
 const router = useRouter()
+const isMenuOpen = ref(false)
 
 onMounted(async () => {
   await checkAuth()
@@ -72,6 +83,7 @@ const handleLogout = () => {
   display: flex;
   align-items: center;
   gap: 1rem;
+  z-index: 1001;
 }
 
 .nav-brand h1 {
@@ -79,6 +91,76 @@ const handleLogout = () => {
   font-weight: 700;
   color: var(--primary);
   letter-spacing: -0.5px;
+}
+
+/* Menu Toggle Button */
+.menu-toggle {
+  display: none;
+  background: none;
+  border: none;
+  width: 40px;
+  height: 40px;
+  position: relative;
+  cursor: pointer;
+  z-index: 1001;
+}
+
+.menu-icon {
+  position: absolute;
+  width: 24px;
+  height: 2px;
+  background-color: var(--neutral);
+  left: 8px;
+  transition: all 0.3s ease;
+}
+
+.menu-icon::before,
+.menu-icon::after {
+  content: '';
+  position: absolute;
+  width: 24px;
+  height: 2px;
+  background-color: var(--neutral);
+  transition: all 0.3s ease;
+}
+
+.menu-icon::before {
+  transform: translateY(-8px);
+}
+
+.menu-icon::after {
+  transform: translateY(8px);
+}
+
+/* Menu Toggle Animation */
+.menu-toggle[aria-expanded="true"] .menu-icon {
+  background-color: transparent;
+}
+
+.menu-toggle[aria-expanded="true"] .menu-icon::before {
+  transform: rotate(45deg);
+}
+
+.menu-toggle[aria-expanded="true"] .menu-icon::after {
+  transform: rotate(-45deg);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+/* Nav Links e User Area */
+.nav-mobile {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
 }
 
 .nav-links {
@@ -97,6 +179,7 @@ const handleLogout = () => {
   transition: all 0.3s ease;
   font-size: 0.95rem;
   position: relative;
+  white-space: nowrap;
 }
 
 .nav-links a::after {
@@ -165,6 +248,82 @@ const handleLogout = () => {
   background: var(--primary-dark);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(52, 152, 219, 0.2);
+}
+
+/* Media Queries para Responsividade */
+@media (max-width: 968px) {
+  .navbar {
+    padding: 1rem;
+  }
+
+  .nav-links {
+    margin: 0 1rem;
+  }
+
+  .nav-links a {
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .user-name {
+    font-size: 0.9rem;
+  }
+
+  .btn-logout {
+    padding: 0.6rem 1.2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .menu-toggle {
+    display: block;
+  }
+
+  .nav-mobile {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: 80%;
+    max-width: 400px;
+    height: 100vh;
+    background: var(--white);
+    flex-direction: column;
+    justify-content: flex-start;
+    padding: 5rem 2rem 2rem;
+    transition: all 0.3s ease;
+    box-shadow: -4px 0 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .nav-mobile.is-open {
+    right: 0;
+  }
+
+  .nav-links {
+    flex-direction: column;
+    margin: 0;
+    width: 100%;
+  }
+
+  .nav-links a {
+    width: 100%;
+    text-align: center;
+  }
+
+  .nav-user {
+    flex-direction: column;
+    padding: 1.5rem 0 0;
+    border-left: none;
+    border-top: 2px solid rgba(0, 0, 0, 0.1);
+    width: 100%;
+  }
+
+  .user-name {
+    margin-bottom: 1rem;
+  }
+
+  .btn-logout {
+    width: 100%;
+  }
 }
 
 .app-main {
