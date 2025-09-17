@@ -6,7 +6,12 @@
     </div>
 
     <div class="word-container" v-if="currentWord">
-      <h2>{{ currentWord.word }}</h2>
+        <div class="word-actions">
+          <h2>{{ currentWord.word }}</h2>
+          <button class="audio-btn" @click="speakWord" title="Ouvir palavra">
+            <i class="fas fa-volume-up"></i>
+          </button>
+        </div>
       <div class="translation-container">
         <button class="translate-btn" @click="showTranslation = !showTranslation">
           Traduzir
@@ -51,6 +56,15 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+const speakWord = () => {
+  if ('speechSynthesis' in window && currentWord.value?.word) {
+    const utterance = new window.SpeechSynthesisUtterance(currentWord.value.word);
+    utterance.lang = 'en-US';
+    window.speechSynthesis.speak(utterance);
+  } else {
+    alert('Seu navegador não suporta áudio ou a palavra está vazia.');
+  }
+};
 import { useRouter } from 'vue-router';
 import api from '@/api/axios';
 import type { AxiosError } from 'axios';
@@ -101,7 +115,7 @@ const fetchWords = async () => {
   }
 };
 
-const getRandomWords = (count, exclude) => {
+const getRandomWords = (count: number, exclude: Word) => {
   const availableWords = words.value.filter(w => w.id !== exclude.id);
   const shuffled = [...availableWords].sort(() => 0.5 - Math.random());
   return shuffled.slice(0, count);
@@ -123,18 +137,18 @@ const setupNextWord = () => {
     .sort(() => 0.5 - Math.random());
 };
 
-const selectOption = async (optionId) => {
+const selectOption = async (optionId: number) => {
   if (showFeedback.value) return;
-  
+
   selectedOption.value = optionId;
   showFeedback.value = true;
-  
-  if (optionId === currentWord.value.id) {
+
+  if (currentWord.value && optionId === currentWord.value.id) {
     score.value.correct++;
   } else {
     score.value.incorrect++;
   }
-  
+
   // Aguarda um momento para mostrar o feedback antes de passar para a próxima palavra
   setTimeout(() => {
     setupNextWord();
@@ -171,6 +185,27 @@ onMounted(() => {
   max-width: 800px;
   margin: 0 auto;
   padding: 20px;
+}
+/* Botão de áudio ao lado da palavra */
+.word-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.audio-btn {
+  background: none;
+  border: none;
+  color: #3498db;
+  cursor: pointer;
+  font-size: 1.5em;
+  padding: 5px;
+  transition: color 0.3s ease;
+}
+
+.audio-btn:hover {
+  color: #2980b9;
 }
 
 .score-info {
