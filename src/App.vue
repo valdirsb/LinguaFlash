@@ -3,7 +3,6 @@
     <nav v-if="isAuthenticated" class="navbar">
       <div class="nav-brand">
         <Logo size="medium" />
-        <h1>LinguaFlash</h1>
       </div>
       <div class="nav-links">
         <RouterLink to="/">Home</RouterLink>

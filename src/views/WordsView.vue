@@ -2,11 +2,11 @@
   <div class="words-menu">
     <h2>Palavras</h2>
     <div class="menu-options">
-      <div class="menu-option" @click="navigateTo('words/register')">
+      <div class="menu-option" @click="navigateTo('register-word')">
         <h3>Cadastrar Palavra</h3>
         <p>Adicione novas palavras ao seu vocabulário</p>
       </div>
-      <div class="menu-option" @click="navigateTo('words/practice')">
+      <div class="menu-option" @click="navigateTo('practice')">
         <h3>Praticar</h3>
         <p>Teste seu conhecimento</p>
       </div>
