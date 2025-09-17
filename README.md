@@ -48,25 +48,36 @@ Uma aplicação web moderna e interativa para aprendizado de idiomas através de
    cd ingles
    ```
 
-2. Inicie os containers:
+2. Configure as variáveis de ambiente:
+   ```bash
+   # Na raiz do projeto
+   cp .env.example .env
+   # Configure as variáveis no arquivo .env conforme necessário
+   ```
+
+3. Inicie os containers:
    ```bash
    docker-compose up --build
    ```
 
-3. Acesse a aplicação:
+4. Acesse a aplicação:
    - Frontend: http://localhost:5173
    - Backend API: http://localhost:3000
+
+> **Nota**: A pasta `/backend/uploads` é usada para armazenar as imagens enviadas pelos usuários. Esta pasta é ignorada pelo Git (exceto o arquivo .gitkeep), então será necessário criar a pasta localmente após clonar o repositório.
 
 ## 📦 Estrutura do Projeto
 
 ```
 .
 ├── backend/
-│   ├── uploads/        # Armazena as imagens enviadas
+│   ├── uploads/        # Armazena as imagens enviadas (ignorado pelo Git)
 │   ├── Dockerfile      # Configuração do container do backend
 │   ├── init.sql       # Schema do banco de dados
 │   ├── package.json   
 │   └── server.js      # Servidor Express
+├── .env.example       # Modelo para configuração das variáveis de ambiente
+├── .env              # Configurações locais (ignorado pelo Git)
 ├── src/
 │   ├── assets/        # Arquivos estáticos (CSS, imagens)
 │   ├── router/        # Configuração das rotas
@@ -183,7 +194,42 @@ Uma aplicação web moderna e interativa para aprendizado de idiomas através de
   - image: file
 - Resposta: Objeto word criado
 
-## ⚙️ Configuração do Docker
+## ⚙️ Configurações do Projeto
+
+### Variáveis de Ambiente
+O projeto utiliza variáveis de ambiente para configuração. Um arquivo `.env.example` é fornecido como modelo:
+
+```bash
+# Server Configuration
+PORT=3000
+NODE_ENV=development
+
+# Database Configuration
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=linguaflash
+DB_USER=your_username
+DB_PASSWORD=your_password
+
+# JWT Configuration
+JWT_SECRET=your_jwt_secret_key
+JWT_EXPIRATION=24h
+
+# File Upload Configuration
+UPLOAD_DIR=./backend/uploads
+MAX_FILE_SIZE=5242880 # 5MB
+```
+
+> **Importante**: O arquivo `.env` contendo as configurações reais não deve ser commitado no Git.
+
+### Arquivos e Diretórios Ignorados
+Os seguintes arquivos e diretórios são ignorados pelo Git por questões de segurança e boas práticas:
+- `.env` e outros arquivos de ambiente (exceto `.env.example`)
+- `/backend/uploads/*` (exceto `.gitkeep`)
+- Arquivos de log e temporários
+- Arquivos de build e dependências
+
+### Configuração do Docker
 
 O projeto utiliza três containers:
 1. **Frontend (app)**

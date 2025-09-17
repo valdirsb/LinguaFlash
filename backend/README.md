@@ -275,6 +275,8 @@ docker-compose up --build
 - Acesso via URL: `http://localhost:3000/uploads/{filename}`
 - Tipos permitidos: .jpg, .jpeg, .png
 - Nomenclatura: timestamp + extensão original
+- A pasta `/uploads` é ignorada pelo Git (exceto .gitkeep)
+- Os arquivos de imagem devem ser mantidos em backup separadamente
 
 ### Persistência
 - Volume Docker mapeado para manter arquivos após rebuild
