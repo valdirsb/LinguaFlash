@@ -48,7 +48,8 @@
       </div>
 
       <div class="form-actions">
-        <button type="submit" :disabled="isSubmitting">
+        <button type="submit" :disabled="isSubmitting" class="submit-btn">
+          <div v-if="isSubmitting" class="button-spinner"></div>
           {{ isSubmitting ? 'Salvando...' : 'Salvar' }}
         </button>
       </div>
@@ -78,16 +79,27 @@
             {{ searchError }}
           </div>
 
-          <div v-if="pixabayImages.length > 0" class="images-grid">
+          <!-- Loading spinner durante busca -->
+          <div v-if="isSearching" class="loading-container">
+            <div class="spinner"></div>
+            <p>Buscando imagens...</p>
+          </div>
+
+          <div v-if="pixabayImages.length > 0 && !isSearching" class="images-grid">
             <div 
               v-for="image in pixabayImages" 
               :key="image.id"
               class="image-item"
+              :class="{ 'downloading': isDownloadingImage === image.id }"
               @click="selectImage(image)"
             >
               <img :src="image.previewURL" :alt="image.tags">
               <div class="image-info">
                 <small>{{ image.tags }}</small>
+              </div>
+              <!-- Loading overlay para imagem sendo baixada -->
+              <div v-if="isDownloadingImage === image.id" class="image-loading-overlay">
+                <div class="small-spinner"></div>
               </div>
             </div>
           </div>
@@ -114,6 +126,7 @@ const error = ref('');
 const showImageSearch = ref(false);
 const searchQuery = ref('');
 const isSearching = ref(false);
+const isDownloadingImage = ref<number | null>(null);
 const searchError = ref('');
 const { images: pixabayImages, isLoading, error: pixabayError, searchImages: searchPixabayImages } = usePixabayImages();
 
@@ -143,6 +156,7 @@ const closeImageSearch = () => {
   showImageSearch.value = false;
   searchQuery.value = '';
   searchError.value = '';
+  isDownloadingImage.value = null;
 };
 
 const searchImages = async () => {
@@ -168,7 +182,7 @@ const searchImages = async () => {
 
 const selectImage = async (image: PixabayImage) => {
   try {
-    isSearching.value = true;
+    isDownloadingImage.value = image.id;
     searchError.value = '';
     
     // Download da imagem diretamente no frontend
@@ -191,7 +205,7 @@ const selectImage = async (image: PixabayImage) => {
     console.error('Erro ao selecionar imagem:', err);
     searchError.value = 'Erro ao baixar imagem. Tente novamente.';
   } finally {
-    isSearching.value = false;
+    isDownloadingImage.value = null;
   }
 };
 
@@ -431,6 +445,86 @@ button:hover:not(:disabled) {
 .image-info small {
   color: #6c757d;
   font-size: 12px;
+}
+
+/* Loading styles */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  text-align: center;
+}
+
+.loading-container p {
+  margin-top: 15px;
+  color: #6c757d;
+  font-size: 14px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.small-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Image loading overlay */
+.image-item {
+  position: relative;
+}
+
+.image-item.downloading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.image-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+}
+
+/* Submit button loading */
+.submit-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.button-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #ffffff40;
+  border-top: 2px solid #ffffff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
 }
 
 .error-message {
