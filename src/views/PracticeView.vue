@@ -1,30 +1,3 @@
-// Função para tocar som de acerto
-const playCorrectSound = () => {
-  const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-  const o = ctx.createOscillator();
-  const g = ctx.createGain();
-  o.type = 'sine';
-  o.frequency.value = 880;
-  g.gain.value = 0.2;
-  o.connect(g);
-  g.connect(ctx.destination);
-  o.start();
-  o.stop(ctx.currentTime + 0.25);
-};
-
-// Função para tocar som de erro
-const playErrorSound = () => {
-  const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-  const o = ctx.createOscillator();
-  const g = ctx.createGain();
-  o.type = 'square';
-  o.frequency.value = 220;
-  g.gain.value = 0.2;
-  o.connect(g);
-  g.connect(ctx.destination);
-  o.start();
-  o.stop(ctx.currentTime + 0.25);
-};
 <template>
   <div class="practice-container" v-if="!showResults">
     <div class="score-info">
