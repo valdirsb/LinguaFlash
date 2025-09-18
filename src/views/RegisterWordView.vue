@@ -171,21 +171,22 @@ const selectImage = async (image: PixabayImage) => {
     isSearching.value = true;
     searchError.value = '';
     
-    // Download da imagem via backend
-    const response = await api.post('/download-image', {
-      imageUrl: image.webformatURL
-    });
+    // Download da imagem diretamente no frontend
+    const response = await fetch(image.webformatURL);
+    const blob = await response.blob();
     
-    if (response.data.success) {
-      // Criar um objeto File simulado para manter compatibilidade
-      const blob = await fetch(`${api.defaults.baseURL}${response.data.url}`).then(r => r.blob());
-      const file = new File([blob], response.data.filename, { type: 'image/jpeg' });
-      
-      formData.value.image = file;
-      imagePreview.value = `${api.defaults.baseURL}${response.data.url}`;
-      
-      closeImageSearch();
-    }
+    // Extrair extensão da URL ou usar jpg como padrão
+    const urlParts = image.webformatURL.split('.');
+    const extension = urlParts[urlParts.length - 1].split('?')[0] || 'jpg';
+    const filename = `pixabay-${image.id}.${extension}`;
+    
+    // Criar objeto File com o blob baixado
+    const file = new File([blob], filename, { type: blob.type });
+    
+    formData.value.image = file;
+    imagePreview.value = URL.createObjectURL(blob);
+    
+    closeImageSearch();
   } catch (err) {
     console.error('Erro ao selecionar imagem:', err);
     searchError.value = 'Erro ao baixar imagem. Tente novamente.';
