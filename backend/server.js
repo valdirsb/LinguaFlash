@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
+const axios = require('axios');
+const fs = require('fs');
 require('dotenv').config();
 
 const createPool = require('./db');
@@ -68,6 +70,49 @@ createPool().then(pool => {
     } catch (error) {
       console.error('Error fetching words:', error);
       res.status(500).json({ error: 'Error fetching words' });
+    }
+  });
+
+  // Download image from URL and save locally
+  app.post('/api/download-image', authMiddleware, async (req, res) => {
+    try {
+      const { imageUrl } = req.body;
+      
+      if (!imageUrl) {
+        return res.status(400).json({ error: 'URL da imagem é obrigatória' });
+      }
+
+      // Download da imagem
+      const response = await axios({
+        method: 'GET',
+        url: imageUrl,
+        responseType: 'stream'
+      });
+
+      // Gerar nome único para o arquivo
+      const filename = Date.now() + '.jpg';
+      const filepath = path.join(__dirname, 'uploads', filename);
+
+      // Salvar arquivo
+      const writer = fs.createWriteStream(filepath);
+      response.data.pipe(writer);
+
+      writer.on('finish', () => {
+        res.json({ 
+          success: true,
+          filename: filename,
+          url: `/uploads/${filename}`
+        });
+      });
+
+      writer.on('error', (err) => {
+        console.error('Erro ao salvar imagem:', err);
+        res.status(500).json({ error: 'Erro ao salvar imagem' });
+      });
+
+    } catch (error) {
+      console.error('Erro ao baixar imagem:', error);
+      res.status(500).json({ error: 'Erro ao baixar imagem' });
     }
   });
 
