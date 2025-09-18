@@ -27,13 +27,17 @@
       <div class="form-group">
         <label for="image">Imagem:</label>
         <div class="image-options">
-          <input 
-            type="file" 
-            id="image" 
-            @change="handleImageChange" 
-            accept="image/*"
-            :required="!formData.image"
-          >
+          <p class="image-options-text">Escolha uma imagem:</p>
+          <button type="button" class="upload-btn">
+            <label for="image" class="upload-label">Selecionar do dispositivo</label>
+            <input 
+              type="file" 
+              id="image" 
+              @change="handleImageChange" 
+              accept="image/*"
+              :required="!formData.image"
+            >
+          </button>
           <button type="button" @click="showImageSearch = true" class="search-btn">
             Buscar na Internet
           </button>
@@ -282,12 +286,15 @@ input[type="file"] {
 }
 
 .image-preview {
-  margin-top: 10px;
-  max-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 10px;
 }
 
 .image-preview img {
-  width: 100%;
+  width: 50%;
   height: auto;
   border-radius: 4px;
 }
@@ -319,19 +326,51 @@ button:hover:not(:disabled) {
 /* Image options */
 .image-options {
   display: flex;
+  flex-direction: column;
   gap: 10px;
   align-items: center;
   margin-bottom: 10px;
 }
 
-.search-btn {
-  background-color: #27ae60;
+.image-options-text {
   font-size: 14px;
-  padding: 8px 15px;
+  color: #2c3e50;
+  margin-bottom: 5px;
 }
 
-.search-btn:hover:not(:disabled) {
-  background-color: #219a52;
+.upload-btn {
+  background-color: #3498db;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.upload-btn:hover {
+  background-color: #2980b9;
+}
+
+.upload-label {
+  cursor: pointer;
+  margin-bottom: 0;
+  color: white;
+  font-size: 14px;
+}
+
+.upload-btn input[type="file"] {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
 }
 
 /* Modal styles */
