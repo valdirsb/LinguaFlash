@@ -266,3 +266,7 @@ O projeto utiliza três containers:
 - Histórico de práticas
 - Estatísticas de aprendizado
 - Modo de revisão espaçada
+
+## 🌟 Novidade: Busca de Imagens no Pixabay
+
+Agora você pode buscar imagens diretamente na internet para associar às palavras cadastradas! Basta clicar no botão "Buscar na Internet" na tela de cadastro de palavras, escolher uma imagem do Pixabay e ela será automaticamente anexada ao formulário.

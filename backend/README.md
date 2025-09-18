@@ -383,3 +383,7 @@ curl -X POST \
    - Confirmar que o token está sendo enviado corretamente nos headers
    - Checar se JWT_SECRET está configurado
    - Validar formato do token (Bearer)
+
+## 🚨 Atualização: Download de Imagens
+
+O endpoint `/api/download-image` foi removido. Agora, o download de imagens do Pixabay é feito diretamente no frontend, simplificando o fluxo e reduzindo a carga no backend.
